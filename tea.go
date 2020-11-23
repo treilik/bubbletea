@@ -71,6 +71,8 @@ type Program struct {
 	// from panics, print the stack trace, and disable raw mode. This feature
 	// is on by default.
 	CatchPanics bool
+
+	lastModel *Model // using a pointer to a empty interface because of performance
 }
 
 // Quit is a special command that tells the Bubble Tea program to exit.
@@ -212,10 +214,23 @@ func (p *Program) Start() error {
 			p.renderer.handleMessages(msg)
 			var cmd Cmd
 			model, cmd = model.Update(msg) // run update
+			p.lastModel = &model           // set the last model to still be able to access it after panic and end of this program
 			cmds <- cmd                    // process command (if any)
 			p.renderer.write(model.View()) // send view to renderer
 		}
 	}
+}
+
+// GetLastModel returns, after the program has stoped, the last Model used.
+func (p *Program) GetLastModel() (Model, error) {
+	if p == nil {
+		return nil, fmt.Errorf("No Program started")
+	}
+	if p.lastModel == nil {
+		return nil, fmt.Errorf("No model set yet")
+	}
+	return &p.lastModel, nil
+
 }
 
 // EnterAltScreen enters the alternate screen buffer, which consumes the entire
