@@ -140,13 +140,13 @@ func Batch(cmds ...Cmd) Cmd {
 		return nil
 	}
 	return func() Msg {
-		return batchMsg(validCmds)
+		return BatchMsg(validCmds)
 	}
 }
 
-// batchMsg is the internal message used to perform a bunch of commands. You
-// can send a batchMsg with Batch.
-type batchMsg []Cmd
+// BatchMsg is a message used to perform a bunch of commands concurrently
+// with no ordering guarantees.
+type BatchMsg []Cmd
 
 // Quit is a special command that tells the Bubble Tea program to exit.
 func Quit() Msg {
@@ -496,7 +496,7 @@ func (p *Program) StartReturningModel() (Model, error) {
 				p.shutdown(false)
 				return model, nil
 
-			case batchMsg:
+			case BatchMsg:
 				for _, cmd := range msg {
 					cmds <- cmd
 				}
